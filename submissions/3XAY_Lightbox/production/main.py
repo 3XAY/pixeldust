@@ -21,7 +21,7 @@ rotBtn.pull = Pull.UP
 
 rot = rotaryio.IncrementalEncoder(board.GP19, board.GP18)
 lastPos = rot.position
-b = 1
+b = 0.02
 while True:
     position = rot.position
     posChange = position - lastPos
@@ -33,15 +33,15 @@ while True:
         pixels.fill((0, 0, 0, 255))
     if(posChange > 0):
         for _ in range(posChange):
-            b=b-1
+            b=b-0.02
     elif(posChange < 0):
         for _ in range(-posChange):
-            b=b+1
-    if(b > 10):
-        b = 10
+            b=b+0.02
+    if(b > 1.0):
+        b = 1.0
     elif(b < 0):
         b = 0
-    pixels.brightness = b / 10
+    pixels.brightness = b
     pixels.show()
     print(b)
     lastPos = position
