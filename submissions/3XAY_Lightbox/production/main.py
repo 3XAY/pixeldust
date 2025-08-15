@@ -19,7 +19,7 @@ rotBtn = DigitalInOut(board.GP8)
 rotBtn.direction = Direction.INPUT
 rotBtn.pull = Pull.UP
 
-rot = rotaryio.IncrementalEncoder(board.GP19, board.GP18)
+rot = rotaryio.IncrementalEncoder(board.GP19, board.GP18, divisor=2)
 lastPos = rot.position
 b = 0.02
 while True:
