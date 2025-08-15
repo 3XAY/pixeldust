@@ -1,61 +1,47 @@
-#This is a simplified version, it is not possible to implement the proper code in Wokwi due to certain libraries not being available + lack of RGBW LEDs
+import board
+import neopixel
+from digitalio import DigitalInOut, Direction, Pull
+import rotaryio
+import supervisor
+supervisor.runtime.autoreload = False
 
-import time
-from neopixel import Neopixel
-from machine import Pin
-from rotary_irq_rp2 import RotaryIRQ
+pixel_pin = board.GP28
+num_pixels = 64
 
-pixels = Neopixel(16, 0, 6, "GRB")
-p0 = Pin(9, Pin.IN)
-p1 = Pin(10, Pin.IN)
-rot = RotaryIRQ(pin_num_clk = 0, pin_num_dt = 1, min_val = 0, max_val = 255, incr = 10, reverse = False, range_mode=RotaryIRQ.RANGE_UNBOUNDED)
+pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=0.3, auto_write=False,
+                           pixel_order=(1, 0, 2, 3))
 
-r = 255
-g = 255
-b = 255
-state = "r"
+btn = DigitalInOut(board.GP4)
+btn.direction = Direction.INPUT
+btn.pull = Pull.UP
 
-lastVal = p0.value()
-lastVal2 = p1.value()
-lastRot = 0
+rotBtn = DigitalInOut(board.GP8)
+rotBtn.direction = Direction.INPUT
+rotBtn.pull = Pull.UP
 
+rot = rotaryio.IncrementalEncoder(board.GP19, board.GP18)
+lastPos = rot.position
+b = 1
 while True:
-  pixels.fill([r, g, b])
-
-  if p0.value() != lastVal:
-    lastVal = p0.value()
-    if state == "r":
-      state = "g"
-    elif state == "g":
-      state = "b"
+    position = rot.position
+    posChange = position - lastPos
+    if(btn.value and rotBtn.value):
+        pixels.fill((255, 0, 0, 0))
+    elif(not btn.value):
+        pixels.fill((0, 255, 0, 0))
     else:
-      state = "r"
-  if state == "r":
-    r += lastRot - rot.value()
-  elif state == "g":
-    g += lastRot - rot.value()
-  else:
-    b += lastRot - rot.value()
-  
-  if p1.value() != lastVal2:
-    lastVal2 = p1.value()
-    r = 255
-    g = 255
-    b = 255
-
-  if r > 255:
-    r = 255
-  if g > 255:
-    g = 255
-  if b > 255:
-    b = 255
-  if r < 0:
-    r = 0
-  if g < 0:
-    g = 0
-  if b < 0:
-    b = 0
-  pixels.show()
-  print("r " + str(r) + "g " + str(g) + "b " + str(b) + "state " + state)
-  lastRot = rot.value()
-  time.sleep(0.2)
+        pixels.fill((0, 0, 0, 255))
+    if(posChange > 0):
+        for _ in range(posChange):
+            b=b-1
+    elif(posChange < 0):
+        for _ in range(-posChange):
+            b=b+1
+    if(b > 10):
+        b = 10
+    elif(b < 0):
+        b = 0
+    pixels.brightness = b / 10
+    pixels.show()
+    print(b)
+    lastPos = position
